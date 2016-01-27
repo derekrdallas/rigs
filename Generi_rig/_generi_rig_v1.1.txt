@@ -1,0 +1,144 @@
+--------- Generic Rig v1.1 --------- 
+Compatible: Maya 5 and higher
+Author: Andrew Silke 
+Email: andrewsilke@cane-toad.com
+Copyright: Andrew Silke 2003
+Web: http://www.cane-toad.com
+Web: http://www.andrewsilke.com (coming soon)
+
+zoo .mel scripts by:
+Author: Hamish McKenzie
+Email: mel@mel.macaronikazoo.com
+Web: http://mel.macaronikazoo.com/
+
+
+--------- General Info --------- 
+Generi is a very generic/basic model rigged for character animation - ready to animate! Full lip sync and facial controls including the brand new trigger UI by Hamish McKenzie is included. It's a simple model with a high quality rig.
+
+The rig is set up with my personal preferences - the spine could do with a more complex setup, but otherwise this is what I like to use. Feel free to have a play and use for non commercial purposes. 
+
+Also included are a couple of useful scripts that make animating in Maya a lot easier. See the bottom of this text file for a brief description of the useful scripts. A big thanks to Hamish McKenzie for these fabulous scripts. Check out his website at http://mel.macaronikazoo.com/ for more great scripts.
+
+A slightly earlier version of this rig was used in the winning entry of the 10 second club October 2003. A similar setup was used in the short film Cane-toad.
+
+http://www.10secondclub.net/animview_main.php?id=833
+http://www.cane-toad.com
+
+--------- Updates --------- 
+- Generi now comes with a very cool 'trigger' user interface created by Hamish McKenzie a very talented dude! This is an alternative way of selecting puppet controls. Like the shelf icons but much better. 
+
+- Generi now comes with a low resolution model for faster playback. Toggle the layers to show the low res meshes.
+
+- A bug has been fixed where the world coords (orient and pos) did not work properly on the arm controls.
+
+--------- Install Instructions --------- 
+1. Unzip file (keep the directory structure when unziping)
+
+2. Move both the .mb and .ma files to your project's scenes directory
+
+3. Move the contents of the prefs\icons folder to your icons directory 
+eg. documents path ...\5.0\prefs\icons\
+
+4. Move the contents of the prefs\shelves folder to your shelves folder
+eg. documents path ...\5.0\prefs\shelves\
+
+5. Move the contents of the scripts folder to your scripts folder
+eg. documents path ...\5.0\scripts\
+The rig will work without any scripts, however the trigger UI requires scripts to run. I've also included some other handy scripts. (See the bottom of this file for info).
+
+6. Start maya and load both shelves...
+To load the shelves go to the left side of the shelf and click on the black triangle>Load Shelf... 
+Then navigate to the shelves folder ie. 
+eg. ...\5.0\prefs\shelves\
+click on the files you have just placed there 
+eg.
+shelf_generiBody.mel
+shelf_generiHead.mel
+
+7. open generi_referenced.ma*
+*Note: I use referenced files when I'm animating however if you do not like this ou can import objects from the reference after you've opened the file:
+
+to do this go file>reference editor
+open the drop down, click on the generi_rig then the in the reference editor window go 
+file>Import Objects From Reference
+
+
+--------- Usage Instructions ---------
+Once the file has loaded it's best to show only polygons, nurbs, handles and curves in your view. Note that the uiShowMMenu.mel included in this .zip simply turns the show menu into a nice marking menu.
+
+I'd also recommend changing the select priority of nurbsCurves higher so that you don't accidentally click the mesh when you try to select a curve. To do this go to the Window>Settings/Preferences> Preferences window and click the 'Selection' category. Then go to the Priority Presets drop down and switch to 'Custom'. Scroll down to nurbsCurve and change it's priority value to 10. If you are using the trigger interface you might also set nurbs to 11 - so you don't select through the UI objects. Click Save
+
+-- Selecting The Controls --
+To select the puppet controls - select the curves/handles on the rig or the trigger interface objects or use the shelf icons. The shelf buttons are toggle select on/off so you can select more than one object at a time.
+
+The animatable attributes for each control are in the channel box. It's important to use the middle click drag functionality of the channel box. ie. click on the attribute (word) you wish to change then hold middle click and drag left/right in the 3d viewport. This provides slider like interactivity. Important!
+
+-- The Trigger UI --
+The trigger UI is a bunch of nurbs surfaces parented to the camera - these surfaces are the triggers for selecting the character controls. When you select a trigger the corresponding puppet control is selected on the character. You can move and scale the trigger icons by clicking the x's. The transparency of the icons can be set on the centre of gravity control (cog_ctrl). If you don't like them you can switch them off completely in the layer bar. 
+
+To switch the UI to a different perspective camera create a shortcut with the following command:
+
+asSwitchUICam;
+
+Make sure the correct scripts are installed for the Trigger Interface to work. 
+
+If you would like to create your own triggers you can do so with the trigger script. Use the following command as a shelf button, hotkey or type the command in the command line:
+
+zooTriggered;
+
+-- Toggle hi resolution/ low resolution model --
+A low resolution body and head are included to speed up animation playback. To switch between hi and lo res - toggle the visibility of the layers in the layer bar.
+
+-- To smooth the hi res mesh --
+Click on the cog_ctrl (red star) at the waist. Change the Smooth Head, Smooth Body and Smooth Lids attributes. You can also change the opacity of the Trigger UI here.
+
+-- Fingers --
+I prefer not to use sliders instead I like to rotate finger joints individually. You can use the selection sets in the outliner to select finger joints, but it is much easier to use the Trigger UI controls. 
+
+If you want to use selection sets they are found in the outliner just below the geo files. The sets are '__anim_fingers_L' and '__anim_fingers_R'. Make sure you have sets visible in the outliner. Open each set in the outliner for easy access. Rotate the finger bones accordingly. 
+
+-- Arms --
+Arms are ik/fk switchable. The ik/fk switch is found on each hand rotation control.
+
+Fk: is pretty obvious, the elbow bend is found on the shoulder control. (use the middle drag functionality of the channel box).
+
+Ik: Use the boxes to move the arms. Use the triangular pole vectors to point the elbows.
+
+Most of the arm controls have parent constraints so the hierarchy of animation can be altered. These attributes can be animated mid way through an animation. The attributes start with Pos_ or Orient_. Make sure the values of these attributes on each control add to a total of 10 to stop weirdness occuring.
+
+-- Legs --
+Pretty self explanatory, use the triangular shapes to point the knees.
+
+-- Spine, Neck and Hips -- 
+Simple fk rotation - rotate them!
+
+-- Face --
+Many of the face controls can be switched on/off inside the head control (head_ctrl), these will appear as handles in the head. You can also select face controls from the generiHead shelf or the trigger UI.
+
+Eyes: can be rotated individually (eye_Rot_R/L) or with the aim control (the eye icon). The eye lids are found on the (eye_Rot_R/L) controls. 'Lid Follow' is a value that lets the eye lids automatically follow the eyes, I like a value of .4.
+
+Brows: 5 bones in the face that can be rotated and moved, pretty simple.
+
+Mouth: Mouth shapes are accessed by selecting the M on top of the head. Sliders are slow and take up too much screen space, instead I use the channel box middle click drag functionality to change shapes. Some mouth shapes should be combined with an open jaw. 
+
+The max value for each shape is 10 but I have allowed the values to go higher. Values higher than 10 will probably look odd. Some values also go into the negative. Highlight 2 values at once then middle click drag in the view port for changing multiple shapes at once. 
+
+Jaw: The jaw features a 3 bone setup. All the bones are controlled through the jaw control (jaw_ctrl). Use the 'Top Lip' and 'Chin' attributes to mix up the mouth positions.
+
+Other: Controls include ears, eye sockets, nose, teeth, tongue.
+
+
+--------- Known Bugs/issues --------- 
+This rig uses auto-driven bicep and forearm bones. Sometimes when the ik arm crosses in front of the shoulder the bicep bones will flip the wrong way and cause the shoulder to collapse. To fix the problem try fiddling with the arms pole vector control until it rights itself. 
+
+
+--------- Mel scripts --------- 
+Open any of the mel scripts in a text editor to see how to use/install.
+
+uiShowMMenu.mel makes a marking menu out of the show menu, to easily toggle the visibility of polygons, nurbs, camera, lights, curves display etc.
+
+zooTangentWks.mel is an absolute must have for any Maya animator. Changes to animation curve tangents can be made without even being in the graph editor or on a key! make sure you try out all the features of this baby, it's a keeper, you won't know what you ever did without it.
+
+zooTriggered.mel is how the Trigger UI was created, it comes with a nice UI and instructions for ease of use. 
+
+Happy Animating! :o)

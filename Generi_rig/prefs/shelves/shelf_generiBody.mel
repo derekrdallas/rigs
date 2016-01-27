@@ -1,0 +1,296 @@
+global proc shelf_generiBody () {
+    global string $gBuffStr;
+    global string $gBuffStr0;
+    global string $gBuffStr1;
+
+
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -label "select move all" 
+        -image1 "generi/moveAll.bmp" 
+        -style "iconOnly" 
+        -command "select -tgl generi_moveAll_ctrl ;" 
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -label "select center of gravity" 
+        -image1 "generi/cog.bmp" 
+        -style "iconOnly" 
+        -command "select -tgl generi_cog_ctrl ;" 
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -label "select hips" 
+        -image1 "generi/hips.bmp" 
+        -style "iconOnly" 
+        -command "select -tgl generi_hips_ctrl ;" 
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -label "select spine01" 
+        -image1 "generi/spine01.bmp" 
+        -style "iconOnly" 
+        -command "select -tgl generi_spine01_ctrl ;" 
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -label "select spine02" 
+        -image1 "generi/spine02.bmp" 
+        -style "iconOnly" 
+        -command "select -tgl generi_spine02_ctrl ;" 
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -label "select spine03" 
+        -image1 "generi/spine03.bmp" 
+        -style "iconOnly" 
+        -command "select -tgl generi_spine03_ctrl ;" 
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -label "select neck" 
+        -image1 "generi/neck.bmp" 
+        -style "iconOnly" 
+        -command "select -tgl generi_neck_ctrl ;\r\n" 
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -label "select head" 
+        -image1 "generi/head.bmp" 
+        -style "iconOnly" 
+        -command "select -tgl generi_head_ctrl ;" 
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -label "select hand R" 
+        -image1 "generi/handR.bmp" 
+        -style "iconOnly" 
+        -command "select -tgl generi_handRotation_ctrl_R ;" 
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -label "select ik arm R" 
+        -image1 "generi/ikArmR.bmp" 
+        -style "iconOnly" 
+        -command "select -tgl generi_ikArm_ctrl_R ;" 
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -label "select arm pole vector R" 
+        -image1 "generi/armPV_R.bmp" 
+        -style "iconOnly" 
+        -command "select - tgl generi_arm_poleV_ctrl_R ;" 
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -label "select shoulder fk R" 
+        -image1 "generi/shoulderR.bmp" 
+        -style "iconOnly" 
+        -command "select -tgl generi_shoulder_ctrl_R ;" 
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -label "select clavicle R" 
+        -image1 "generi/clavicleR.bmp" 
+        -style "iconOnly" 
+        -command "select -tgl generi_clavicle_ctrl_R ;" 
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -label "select clavicle L" 
+        -image1 "generi/clavicleL.bmp" 
+        -style "iconOnly" 
+        -command "select -tgl generi_clavicle_ctrl_L ;" 
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -label "select shoulder fk L" 
+        -image1 "generi/shoulderL.bmp" 
+        -style "iconOnly" 
+        -command "select -tgl generi_shoulder_ctrl_L ;" 
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -label "select arm pole vector L" 
+        -image1 "generi/armPV_L.bmp" 
+        -style "iconOnly" 
+        -command "select -tgl generi_arm_poleV_ctrl_L ;" 
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -label "select ik arm L" 
+        -image1 "generi/ikArmL.bmp" 
+        -style "iconOnly" 
+        -command "select -tgl generi_ikArm_ctrl_L ;" 
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -label "select hand L" 
+        -image1 "generi/handL.bmp" 
+        -style "iconOnly" 
+        -command "select -tgl generi_handRotation_ctrl_L ;" 
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -label "select foot R" 
+        -image1 "generi/footR.bmp" 
+        -style "iconOnly" 
+        -command "select -tgl generi_foot_ctrl_R ;" 
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -label "select leg pole vector R" 
+        -image1 "generi/legPV_R.bmp" 
+        -style "iconOnly" 
+        -command "select -tgl generi_leg_poleV_ctrl_R ;" 
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -label "select leg pole vector L" 
+        -image1 "generi/legPV_L.bmp" 
+        -style "iconOnly" 
+        -command "select -tgl generi_leg_poleV_ctrl_L ;\r\n" 
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -label "select foot L" 
+        -image1 "generi/footL.bmp" 
+        -style "iconOnly" 
+        -command "select -tgl generi_foot_ctrl_L ;" 
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -label "select head follow" 
+        -image1 "generi/smiley.bmp" 
+        -style "iconOnly" 
+        -command "select -tgl generi_head_follow_ctrl ;" 
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -label "select -tgl generi_eye_follow_ctrl ;" 
+        -image1 "generi/eyeFollow.bmp" 
+        -style "iconOnly" 
+        -command "select -tgl generi_eye_follow_ctrl ;" 
+    ;
+
+} 

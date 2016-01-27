@@ -1,0 +1,615 @@
+//
+// zooTriggered
+//
+// Created by Hamish McKenzie mel@mel.macaronikazoo.com
+// Created : 17 May 2003
+//
+// Description:
+// allows you to create "trigger" objects.  Triggers can
+// be configured to do just about anything.
+//
+// Usage:
+//  load the UI using: zooTriggered
+//  you can also install a shelf button from the UI which
+//  reflects the load status of the script
+//
+// Hamish McKenzie ©2003...
+// Macaroni Kazoo Productions ©2003...
+
+
+global proc zooTriggered () {
+	string $windowName = "zooTriggeredWindow";
+	string $windowTitle = "zooTriggered! v" + `zooTriggeredInfo version` + "   ::macaroniKazoo::";
+	int $doesShelveItExist = `exists zooShelveIt`;
+	int $doesSortToExist = `exists zooSortToHeirarchy`;
+
+	if( $doesShelveItExist ) eval( "source zooShelveIt;" );
+	if( $doesSortToExist ) eval( "source zooSortToHeirarchy;" );
+	if( `window -exists $windowName` ) deleteUI $windowName;
+
+	window -title $windowTitle -resizeToFitChildren 1 -maximizeButton 0 -sizeable 1 -widthHeight 330 250 $windowName;
+
+		scriptJob -p $windowName -e "SceneOpened" "zooTriggeredWindowFunctions -update n;";
+		menuBarLayout;
+			if( $doesShelveItExist ) {
+				menu -label "File";
+					menuItem -l "Install Shelf Button" -c ( "zooTriggeredSetup" );
+					menuItem -divider 1;
+					menuItem -l "Remove Shelf Button" -c ( "deleteUI `zooShelveItGetShelfButton zooTriggered`" );
+					}
+
+			menu -label "Edit";
+				menuItem -l "Force UI Update" -c ( "zooTriggeredWindowFunctions -update n" );
+			menu -label "Help";
+				menuItem -l "Help..." -c ( "zooTriggeredHelp help" );
+				menuItem -divider 1;
+				menuItem -l "About" -c ( "zooTriggeredHelp about" );
+
+			string $form = `formLayout`;
+				string $row1 = `rowColumnLayout -numberOfColumns 4
+					-columnWidth 1 80
+					-columnWidth 2 80
+					-columnWidth 3 100
+					-columnWidth 4 80
+					-columnAttach 1 "both" 1
+					-columnAttach 2 "both" 1
+					-columnAttach 3 "both" 1
+					-columnAttach 4 "both" 1`;
+					button -l "load" -height 18 -c ( "zooTriggeredFunctions -load; zooTriggeredWindowFunctions -update n" );
+					button -l "unLoad" -height 18 -c ( "zooTriggeredFunctions -unload; zooTriggeredWindowFunctions -update n" );
+					text -l "load status ->" -align center -height 18;
+					palettePort -ed 0 -height 18 -dim 1 1 -rgb 0 0 0 0 zooTriggeredPaletteStatus;
+					setParent ..;
+
+				string $createText = `text -l "create commands:"`;
+				string $buttons = `columnLayout -adjustableColumn true -rowSpacing 0`;
+					button -width 150 -l "connect selected" -height 18 -c ( "zooTriggeredWindowFunctions -connectSelected n; zooTriggeredWindowFunctions -update n" );
+					button -l "select connected objs" -height 18 -c ( "zooTriggeredWindowFunctions -selectConnected n; zooTriggeredWindowFunctions -update n" );
+					button -l "key connected objs" -height 18 -c ( "zooTriggeredWindowFunctions -keyConnected n; zooTriggeredWindowFunctions -update n" );
+					button -l "add empty command" -height 18 -c ( "zooTriggeredWindowFunctions -addEmpty n; zooTriggeredWindowFunctions -update n" );
+					button -l "remove commands" -height 18 -c ( "zooTriggeredWindowFunctions -remCommands n; zooTriggeredWindowFunctions -update n" );
+					button -l "remove connections" -height 18 -c ( "zooTriggeredWindowFunctions -remConnections n; zooTriggeredWindowFunctions -update n" );
+					setParent ..;
+				string $selSelected = `button -l ">" -c( "zooTriggeredWindowFunctions -loadSelected n" )`;
+
+				string $subForm = `formLayout`;
+					string $triggerText = `text -l "zooTriggered! Objects:"`;
+					textScrollList -numberOfRows 8 -dcc ( "zooTriggeredWindowFunctions -selectTrigger n" ) -allowMultiSelection 0 -sc ( "zooTriggeredWindowFunctions -update n" ) zooTriggeredScrollObjects;
+
+					string $targetText = `text -l "targets:"`;
+					textScrollList -numberOfRows 8 -dcc ( "zooTriggeredWindowFunctions -selectTarget n" ) -allowMultiSelection 1 zooTriggeredScrollTargets;
+					setParent ..;
+
+				string $commandText = `text -l "command:"`;
+ 				textField -text "" -cc ( "zooTriggeredWindowFunctions -custom n; zooTriggeredWindowFunctions -update n" ) zooTriggeredTextCustom;
+
+ 				string $image = `image -width 340 -height 8 -backgroundColor ((float)96/255) ((float)100/255) ((float)146/255) -image ( internalVar("-userBitmapsDir") + "/zoo_sig.tga" )`;
+				setParent ..;
+
+	formLayout -edit
+		-attachForm		$row1 "top"		2
+		-attachForm		$row1 "left"	2
+		-attachForm		$row1 "right"	2
+		-attachNone 	$row1 "bottom"
+
+		-attachControl	$createText "top"		2 $row1
+		-attachForm		$createText "left"	35
+		-attachNone		$createText "right"
+		-attachNone		$createText "bottom"
+
+		-attachControl	$buttons "top"		2 $createText
+		-attachForm		$buttons "left"	2
+		-attachNone		$buttons "right"
+		-attachControl	$buttons "bottom" 2 zooTriggeredTextCustom
+
+		-attachControl	$selSelected "top"		2 $createText
+		-attachControl	$selSelected "left"	2 $buttons
+		-attachNone	$selSelected "right"
+		-attachControl	$selSelected "bottom" 2 zooTriggeredTextCustom
+
+		-attachControl	$subForm "top"		2 $row1
+		-attachControl	$subForm "left"	2 $selSelected
+		-attachForm		$subForm "right"	2
+		-attachControl	$subForm "bottom" 2 zooTriggeredTextCustom
+
+		-attachNone		$commandText "top"
+		-attachForm		$commandText "left"		2
+		-attachNone		$commandText "right"
+		-attachControl	$commandText "bottom"	0 $image
+
+		-attachNone			zooTriggeredTextCustom "top"
+		-attachControl		zooTriggeredTextCustom "left"		2 $commandText
+		-attachForm			zooTriggeredTextCustom "right"	2
+		-attachControl		zooTriggeredTextCustom "bottom"	2 $image
+
+		-attachNone	$image "top"
+		-attachForm	$image "left"		2
+		-attachForm	$image "right"		0
+		-attachForm	$image "bottom"	0
+		$form;
+
+	formLayout -edit
+		-attachForm			$triggerText "top"	0
+		-attachForm			$triggerText "left"	0
+		-attachPosition	$triggerText "right"	0 55
+		-attachNone 		$triggerText "bottom"
+
+		-attachControl		zooTriggeredScrollObjects "top"		2 $triggerText
+		-attachForm			zooTriggeredScrollObjects "left"		0
+		-attachPosition	zooTriggeredScrollObjects "right"	0 55
+		-attachForm 		zooTriggeredScrollObjects "bottom"	0
+
+		-attachForm		$targetText "top"		0
+		-attachControl	$targetText "left"	2 $triggerText
+		-attachForm		$targetText "right"	0
+		-attachNone 	$targetText "bottom"
+
+		-attachControl	zooTriggeredScrollTargets "top"		2 $targetText
+		-attachControl	zooTriggeredScrollTargets "left"		2 zooTriggeredScrollObjects
+		-attachForm		zooTriggeredScrollTargets "right"	0
+		-attachForm 	zooTriggeredScrollTargets "bottom"	0
+		$subForm;
+
+	popupMenu -p $image -b 1 -pmc ( "showHelp -a \"http://www.macaronikazoo.com/mel\"" );
+	showWindow $windowName;
+	zooTriggeredWindowFunctions -update n;
+	}
+
+
+global proc zooTriggeredWindowFunctions ( string $function, string $variable01 ) {
+	global int $zooTriggered;
+	string $windowName = "zooTriggeredWindow";
+
+	switch( $function ) {
+		case "-u":
+		case "-update":
+		string $buttons[] = `zooShelveItGetShelfButtonAll zooTriggered`;
+		for( $button in $buttons ) if( $button != "" ) {
+			shelfButton -e -image1 ( `internalVar -userBitmapsDir` + "zooTriggered_" + `zooTriggeredState` + ".bmp" ) $button;
+			if ( `shelfButton -q -numberOfPopupMenus $button` == 0 ) {
+				popupMenu -p $button;
+					menuItem -l "load control window" -c ( "zooTriggered" );
+					menuItem -divider 1;
+					menuItem -l "Help..." -c ( "zooTriggeredHelp help" );
+					menuItem -l "About" -c ( "zooTriggeredHelp about" );
+					setParent ..;
+				}
+			}
+
+		if( `window -exists $windowName` ) {
+			if( `scriptJob -exists $zooTriggered` && $zooTriggered != 0 ) palettePort -e -rgb 0 0 1 0 -redraw zooTriggeredPaletteStatus;
+			else palettePort -e -rgb 0 1 0 0 -redraw zooTriggeredPaletteStatus;
+
+			//update the list of zooTriggered! objects
+			string $zooTriggeredObjs[] = `zooTriggeredGetTriggers`;
+			string $selectedText[] = `textScrollList -q -selectItem zooTriggeredScrollObjects`;
+
+			textField -e -enable 1 zooTriggeredTextCustom;
+			textScrollList -e -removeAll zooTriggeredScrollObjects;
+			textScrollList -e -removeAll zooTriggeredScrollTargets;
+
+			for( $obj in $zooTriggeredObjs ) textScrollList -e -append $obj zooTriggeredScrollObjects;
+			if( `objExists $selectedText[0]` ) textScrollList -e -selectItem $selectedText[0] zooTriggeredScrollObjects;
+
+			//update target list
+			if( `objExists $selectedText[0]` ) {
+				string $targets[] = `zooTriggeredGetConnectedObjects $selectedText[0]`;
+				for( $obj in $targets ) textScrollList -e -append $obj zooTriggeredScrollTargets;
+				}
+
+			//update the custom command string
+			if( `objExists ( $selectedText[0] + ".zooTriggeredSelectCmd" )` ) textField -e -text `getAttr ( $selectedText[0] + ".zooTriggeredSelectCmd" )` zooTriggeredTextCustom;
+			else textField -e -enable 0 -text "" zooTriggeredTextCustom;
+
+			//update zooTriggeredScrollFeedback
+			}
+		break;
+
+
+		case "-loadSelected":
+		string $selObjs[] = `ls -sl`;
+		textScrollList -e -selectItem $selObjs[0] zooTriggeredScrollObjects;
+		zooTriggeredWindowFunctions -update n;
+		break;
+
+
+		case "-selectTrigger":
+		select `textScrollList -q -selectItem zooTriggeredScrollObjects`;
+		break;
+
+
+		case "-selectTarget":
+		select `textScrollList -q -selectItem zooTriggeredScrollTargets`;
+		break;
+
+
+		case "-addEmpty":
+		string $selObjs[] = `ls -sl`;
+		if( $variable01 != "n" && `objExists $variable01` ) $selObjs = { $variable01 };
+		for ( $obj in $selObjs ) if( !`objExists ( $obj + ".zooTriggeredSelectCmd" )` ) addAttr -ln zooTriggeredSelectCmd -dt "string" $obj;
+		break;
+
+
+		case "-custom":
+		string $selectedObj[] = `textScrollList -q -selectItem zooTriggeredScrollObjects`;
+		string $newCommand = `textField -q -text zooTriggeredTextCustom`;
+
+		setAttr -type "string" ( $selectedObj[0] + ".zooTriggeredSelectCmd" ) $newCommand;
+		break;
+
+
+		case "-rcnx":
+		case "-remConnections":
+		string $selectedObj[] = `textScrollList -q -selectItem zooTriggeredScrollObjects`;
+		string $attrPrefix = "zooTriggeredObj";
+		for ( $obj in $selectedObj ) {
+			int $attrs[] = `zooTriggeredGetAllAttrSlots $obj`;
+			for( $attr in $attrs ) if( `objExists ( $obj+"."+$attrPrefix+$attr )`) deleteAttr ( $obj+"."+$attrPrefix+$attr );
+			}
+		break;
+
+
+		case "-rcmd":
+		case "-remCommands":
+		string $selectedObj[] = `textScrollList -q -selectItem zooTriggeredScrollObjects`;
+		for ( $obj in $selectedObj ) if( `objExists ( $obj+".zooTriggeredSelectCmd" )`) deleteAttr ( $obj + ".zooTriggeredSelectCmd" );
+		break;
+
+
+		case "-cs":
+		case "-connectSelected":
+		string $selObjs[] = `ls -sl`;
+		string $trigger = $selObjs[0];
+		string $attrPrefix = "zooTriggeredObj";
+
+		//first remove all existing connections as the user usually wants to replace the selection list
+		int $existingSlots[] = `zooTriggeredGetAllAttrSlots $trigger`;
+		for( $slot in $existingSlots ) if( `objExists ( $trigger+"."+$attrPrefix+$slot )`) deleteAttr ( $trigger+"."+$attrPrefix+$slot );
+
+		//now create the connection slots, and connect the objects
+		for( $n = 1; $n < `size $selObjs`; $n++ ) {
+			int $attrNumber = `zooTriggeredGetNextSlot $selObjs[0]`;
+			string $attrName = ( "zooTriggeredObj" + $attrNumber );
+			if( !`objExists ( $trigger + "." + $attrName )`) addAttr -ln $attrName -at bool $trigger;
+			connectAttr -f ( $selObjs[$n] + ".message" ) ( $trigger + "." + $attrName );
+			}
+
+		//now create an empty command
+		zooTriggeredWindowFunctions -addEmpty $selObjs[0];
+		break;
+
+
+		case "-sc":
+		case "-selectConnected":
+		string $selObjs[] = `ls -sl`;
+		string $trigger = $selObjs[0];
+		string $cmd = "\"select -d #; select -add @; setToolTo $gMove;\" \"*\"";
+
+		zooTriggeredWindowFunctions -connectSelected n;
+		setAttr -type "string" ( $trigger + ".zooTriggeredSelectCmd" ) $cmd;
+		break;
+
+
+		case "-kc":
+		case "-keyConnected":
+		string $selObjs[] = `ls -sl`;
+		string $trigger = $selObjs[0];
+		string $cmd = "\"select -d #; setKeyframe @;\" \"*\"";
+
+		zooTriggeredWindowFunctions -connectSelected n;
+		setAttr -type "string" ( $trigger + ".zooTriggeredSelectCmd" ) $cmd;
+		break;
+		}
+	}
+
+
+global proc zooTriggeredFunctions( string $function ) {
+	global int $zooTriggered;
+
+	switch ( $function ) {
+		case "-l":
+		case "-load":
+		if ( !`zooTriggeredState` ) {
+			$zooTriggered = `scriptJob -compressUndo 1 -event SelectionChanged ( "zooTriggeredFunctions -execute" )`;
+			print( "zooTriggered! has been loaded!\n" );
+			}
+		else warning( "zooTriggered! is already loaded" );
+		break;
+
+
+		case "-u":
+		case "-unload":
+		if ( `zooTriggeredState` ) {
+			scriptJob -kill $zooTriggered;
+			$zooTriggered = 0;
+			print( "zooTriggered! has been unloaded\n" );
+			}
+		else warning( "zooTriggered! wasn't loaded" );
+		break;
+
+
+		case "-tgl":
+		case "-toggle":
+		if ( `zooTriggeredState` ) zooTriggeredFunctions -unload;
+		else zooTriggeredFunctions -load;
+		zooTriggeredWindowFunctions -update n;
+		break;
+
+
+		case "-x":
+		case "-execute":
+		string $selObjs[] = `ls -sl`;
+		string $triggers[] = `zooTriggeredGetTriggersFromList $selObjs`;
+
+		if( `size $selObjs` ) for( $obj in $triggers ) if( `objExists ( $obj + ".zooTriggeredSelectCmd" )` ) eval( "zooTriggeredCommands " + `getAttr ( $obj + ".zooTriggeredSelectCmd" )` + " " + $obj );
+		break;
+		}
+	}
+
+
+//this is the command engine for the script.
+//
+//-----Examples-----
+//set a keyframe on all set members:  "setKeyframe `sets -q @`" "*";
+//add the object in the first slot to the selection:  "_sel" "1";
+//keys the second, third and fifth connected objects:  _key "2,3,5";
+//deselects the trigger and deletes all selected objects:  "select -d #;delete" "*";
+//set scaleX on all objects to 2: "for( $obj in @ ) setAttr ( $obj + \".scaleX\" ) 2" "*"
+//
+//-----NOTE-----
+//all connected objects are 1-based indicies.  ie the first object connected is object 1, not object 0
+//
+global proc zooTriggeredCommands( string $command, string $parameter, string $trigger ) {
+	string $attrPrefix = "zooTriggeredObj";
+	string $objectList[] = `zooTriggeredGetConnectedObjects $trigger`;
+	string $targets = "{";
+
+	if( $parameter == "*" ) for( $obj in $objectList ) $targets = $targets+"\""+$obj+"\""+",";
+	else {
+		string $buffer[];
+		tokenize $parameter "," $buffer;
+		for( $tok in $buffer ) $targets = $targets+"\""+$objectList[((int)$tok)-1]+"\""+",";
+		}
+	$targets = `substring $targets 1 ( size($targets)-1 )`;
+	$targets = $targets + "}";
+
+	switch( $command ) {
+		case "_sel":
+		select -deselect $trigger;
+		eval( "select -add " + $targets );
+		break;
+
+
+		case "_key":
+		eval( "setKeyframe " + $targets );
+		break;
+
+
+		default:
+		//now, if the user hasn't specified a pre defined flag, they can use custom mel commands, with the parameter flag specifying which connections to pass to the command
+		string $cmdString = $command + " ";
+
+		//the # symbol is used to refer to the trigger itself - so sub the name of the trigger into the command
+		while( `match "#+" $cmdString` != "" ) $cmdString = `substitute "#+" $cmdString $trigger`;
+
+		//the @ symbol references the target objects
+		while( `match "@+" $cmdString` != "" ) $cmdString = `substitute "@+" $cmdString $targets`;
+
+		//the % symbol allows the user to work on a single target object.  the object is handled as a string, as it is a single object only
+		while( `match "(%[0-9])+" $cmdString` != "" ) {
+			string $custom = `match "(%[0-9])+" $cmdString`;
+			int $targetNum = `substring $custom 2 (size($custom))`;
+			$cmdString = `substitute "(%[0-9])+" $cmdString $objectList[( $targetNum-1 )]`;
+			}
+
+		eval $cmdString;
+		break;
+		}
+	}
+
+
+//returns an array of all objects connected to the specified trigger
+global proc string[] zooTriggeredGetConnectedObjects( string $obj ) {
+	string $attrs[] = `listAttr -ud $obj`;
+	string $objects[];
+	string $attrPrefix = "zooTriggeredObj";
+	int $prefixLength = `size $attrPrefix`;
+
+	for( $attr in $attrs ) if( `substring $attr 1 $prefixLength` == $attrPrefix ) $objects[( `size $objects` )] = `connectionInfo -sfd ( $obj + "." + $attr )`;
+	for( $n = 0; $n < `size $objects`; $n++ ) {
+		string $buffer[];
+		tokenize $objects[$n] "." $buffer;
+		$objects[$n] = $buffer[0];
+		}
+
+	return $objects;
+	}
+
+
+//returns the first available connect attr slot number.  ie if a trigger has 4 objects connected to it, on attr numbers 1, 2, 4, 5; then this proc will return 3 as its the first available slot
+global proc int zooTriggeredGetNextSlot( string $obj ) {
+	string $attrPrefix = "zooTriggeredObj";
+	int $slotExists = 1;
+	int $nextSlot = 1;
+
+	while( $slotExists ) {
+		if( `objExists ( $obj+"."+$attrPrefix+$nextSlot )` ) if( `connectionInfo -sfd ( $obj+"."+$attrPrefix+$nextSlot )` == "" ) $slotExists = 0; //if the slot exists and isn't connected to anything
+		if( !`objExists ( $obj+"."+$attrPrefix+$nextSlot )` ) $slotExists = 0; //if the slot doesn't exist
+		else $nextSlot++;
+		}
+
+	return $nextSlot;
+	}
+
+
+//lists all used slots
+global proc int[] zooTriggeredGetUsedAttrSlots( string $obj ) {
+	string $attrPrefix = "zooTriggeredObj";
+	int $slots[] = `zooTriggeredGetAllAttrSlots $obj`;
+	int $usedSlots[];
+
+	for( $slot in $slots ) if( `connectionInfo -sfd ( $obj+"."+$attrPrefix+$slot )` != "" ) $usedSlots[( `size $usedSlots` )] = $slot;
+
+	return $usedSlots;
+	}
+
+
+//lists all slots
+global proc int[] zooTriggeredGetAllAttrSlots( string $obj ) {
+	string $attrs[] = `listAttr -ud $obj`;
+	string $attrPrefix = "zooTriggeredObj";
+	int $numbers[];
+	int $prefixLength = `size $attrPrefix`;
+	int $lastAttr = 0;
+
+	for( $attr in $attrs ) if( `size $attr` > $prefixLength ) if( `match "[0-9]+" $attr` != "" ) $numbers[( `size $numbers` )] = (int)`match "[0-9]+" $attr`;
+	$numbers = `sort $numbers`;
+
+	return $numbers;
+	}
+
+
+global proc int zooTriggeredState () {
+	global int $zooTriggered;
+	int $state = 0;
+
+	if ( `scriptJob -exists $zooTriggered` && $zooTriggered != 0 ) $state = 1;
+	return $state;
+	}
+
+
+// this proc gets a list of trigger objects.
+// the argument can be either * - get all triggers, or a list of objects from which it will return
+// all of the triggers
+//
+global proc string[] zooTriggeredGetTriggersFromList( string $objList[] ) {
+	string $triggers[] = `zooTriggeredGetTriggers`;
+	string $zooTriggeredObjects[];
+	string $itersector = "zooTriggeredIntersector";
+
+	if( `stringArrayIntersector -exists zooTriggeredIntersector` ) deleteUI $itersector;
+	$itersector = `stringArrayIntersector -intersect $triggers $itersector`;
+	stringArrayIntersector -e -intersect $objList $itersector;
+	$zooTriggeredObjects = `stringArrayIntersector -q $itersector`;
+	deleteUI $itersector;
+
+	return $zooTriggeredObjects;
+	}
+
+
+// this proc returns a list of all trigger objects in the scene.
+global proc string[] zooTriggeredGetTriggers () {
+	string $allObjects[] = `ls -type transform`;
+	string $zooTriggeredObjects[];
+	int $n = 0;
+
+	for ( $obj in $allObjects ) {
+		if ( `objExists ( $obj + ".zooTriggeredSelectCmd" )` ) {
+			$zooTriggeredObjects[$n] = $obj;
+			$n++;
+			}
+		}
+
+	return $zooTriggeredObjects;
+	}
+
+
+global proc zooTriggeredSetup () {
+	string $button = `zooShelveItInstallShelfButton zooTriggered`;
+	string $image = `internalVar -userBitmapsDir` + "zooTriggered_" + `zooTriggeredState` + ".bmp";
+	string $cmd = "source zooTriggered; if (`zooTriggeredState`) { zooTriggeredFunctions -unload; zooTriggeredWindowFunctions -update n; } else { zooTriggeredFunctions -load; zooTriggeredWindowFunctions -update n; }";
+
+	shelfButton -e -image1 $image -label "zooTriggered! shelf button" -ann "load/unload zooTriggered! - right click for additional options" -command $cmd $button;
+	zooTriggeredWindowFunctions -update n;
+	}
+
+
+global proc zooTriggeredHelp ( string $function ) {
+	string $windowName = "zooTriggeredAbout";
+	string $windowTitle = "About zooTriggered! v" + `zooTriggeredInfo version` + "   ::macaroniKazoo::";
+	string $aboutSections[];
+	string $aboutScript;
+	string $aboutAuthor = "Version: " + `zooTriggeredInfo version` + "\nCreation Date: " + `zooTriggeredInfo created` + "\nModified: " + `zooTriggeredInfo modified` + "\n\nzooTriggered! was written by Macaroni Kazoo Productions  www.macaronikazoo.com\n\n" + `zooTriggeredInfo history`;
+	int $selTab = ( $function == "about" )?2:1;
+
+	$aboutSections[( `size $aboutSections` )] = "What does this do?\nzooTriggered creates and manages trigger objects.  A trigger is an object that \"does something\" when its selected, to all or some of the objects connected to the trigger.  A pseudo mel command is attached to the trigger object, and is executed when the trigger is selected.  You can connect target objects to a trigger, and then apply the commands to these targets without specifying actual object names.  This allows object names to change without breaking the triggers.\n\n";
+	$aboutSections[( `size $aboutSections` )] = "How it Works:\nSelect the object you want to be the trigger.  Then to that selection add all objects that you wish to be targets.  Then press the \"connect selected\" button, which will connect all of the targets to trigger attributes on trigger.  When you do this, the trigger object becomes listed in the UI.  When you select a trigger object in the UI, the command currently attached to that object is listed.  By using connections, commands can be applied to objects without having to explicitly specify their names in command text, which allows both the target and the trigger object's names to change even after the trigger has been setup.\n\n";
+	$aboutSections[( `size $aboutSections` )] = "Once you've connected the targets, the trigger object should appear in the list of triggers.  Now you can write commands which can act on these targets.  Commands have two parts to them.  The command string, and the list of objects to operate on.  Each part is contained between its own set of quotes like so:\n\"commandString\" \"1,2,3\"\n\nSo the first section is the actual mel command, and the second, specifies which targets the command is applied to.\n\n";
+	$aboutSections[( `size $aboutSections` )] = "Targets can then be specified using either the * operator (ie all targets), or comma separated lists, like: \"1,3,4\" which will act on the first, third and fourth targets.  For example:\n\n";
+	$aboutSections[( `size $aboutSections` )] = "Just say we have 4 objects called: trigger, obj1, obj2 and obj3.  After connecting obj1, obj2 and obj3 to trigger, we can use a command like:\n\"setKeyframe @\" \"1,3\"\n\n";
+	$aboutSections[( `size $aboutSections` )] = "So the command in this example is: setKeyframe @.  This is just a normal mel command, except for the @ symbol.  The @ symbol gets replaced by an array containing the names of the target objects, which in this case are the objects: obj1, obj2 and obj3.  But in this example, we're not applying the command to all of the targets.\n\n";
+	$aboutSections[( `size $aboutSections` )] = "The second part is the list of objects the command works on.  It can be either a *, or a comma separated number list such we have in the example \"1,3\".  So the @ symbol in the example, gets replaced by an array containing the 1 and 3 target objects, which are objects obj1 and obj3.  So the command that gets executed when we select the object trigger is:\nsetKeyframe { \"obj1\", \"obj3\" }\n\n";
+	$aboutSections[( `size $aboutSections` )] = "Its important to remember that the @ symbol always gets replaced by an array, even when you're only acting on a single object.\n\n";
+	$aboutSections[( `size $aboutSections` )] = "Also, the # symbol refers to the trigger itself.  It gets replaced by the name of the trigger when the command is executed.  So you can have commands that reference the trigger itself, which can be very useful (see the examples section below).\n\n";
+	$aboutSections[( `size $aboutSections` )] = "The last symbol to remember is the % symbol.  The % symbol followed by a number can be used to refer to a single target within the command.  This is replaced by a string, NOT a string array.  So if you wanted to say, hide the first target, and then select the second, third fourth targets, you would use the command:\n\"setAttr %1.visibility 0; select -add @\" \"2,3,4\"\n\n";
+	$aboutSections[( `size $aboutSections` )] = "Usage:\nOk, so whats this really useful for?  Well, I use it to make selecting parts of character's easier.  For example I have empty groups point constrained to my elbow and knee joints with their display handles turned on, which are triggers that select the pole vectors for that limb.  This is useful because sometimes the pole vectors become hard to find.\n\n";
+	$aboutSections[( `size $aboutSections` )] = "Viewport Buttons:\nThey're also useful for creating viewport \"buttons\".  To do this, have an object parented to your view camera that keys all objects in a selection set.  If you connect a character's selection set to a trigger, by using this command:\n\"setkeyframe `sets -q @`\" \"*\"\n\nyou can key an entire character easily.  Or even have simple geometry parented to your camera in the shape of the character, to provide an easy way to select different parts of the character.\n\n";
+	$aboutSections[( `size $aboutSections` )] = "Summary:\n#  refers to the trigger.\n\n@  refers to all specified targets.\n\n%x  is used to refer to a specified single target object - ie %3 is the third target.\n\n";
+	$aboutSections[( `size $aboutSections` )] = "Examples:\nTo select all targets, and set the current tool the move tool:\n\"select -d #; select -add @; setToolTo $gMove;\" \"*\"\n\nTo loop over all target objects, and toggle their visibility attribute, use the following:\n\"for($obj in @) setAttr ($obj+\\\".v\\\") (!`getAttr ($obj+\\\".v\\\")`)\" \"*\"\n\nTo hide the first target, and unhide the second target, and then deselect the trigger:\n\"setAttr %1.v 0; setAttr %2.v 1; select -d #\" \"*\"";
+	for( $entry in $aboutSections ) $aboutScript = $aboutScript + $entry;
+
+	if( `window -exists $windowName` ) deleteUI $windowName;
+
+	window -title $windowTitle -resizeToFitChildren 1 -maximizeButton 1 -sizeable 1 -widthHeight 450 350 $windowName;
+
+		string $form = `formLayout`;
+		string $tabs = `tabLayout -innerMarginWidth 5 -innerMarginHeight 5`;
+		string $image = `image -p $form -width 300 -height 8 -backgroundColor ((float)96/255) ((float)100/255) ((float)146/255) -image ( internalVar("-userBitmapsDir") + "/zoo_sig.tga" )`;
+		formLayout -edit
+			-attachForm $tabs "top" 0
+			-attachForm $tabs "left" 0
+			-attachForm $tabs "right" 0
+			-attachControl $tabs "bottom" 2 $image
+
+			-attachNone $image "top"
+			-attachForm $image "left" 0
+			-attachForm $image "right" 0
+			-attachForm $image "bottom" 0
+			$form;
+
+			string $child1 = `paneLayout -configuration "single"`;
+				scrollField -ed 0 -wordWrap 1 -font plainLabelFont -w 300 -h 200 -numberOfLines 15 -text $aboutScript;
+				setParent ..;
+
+			string $child2 = `paneLayout -configuration "single"`;
+				scrollField -ed 0 -wordWrap 1 -font plainLabelFont -w 300 -h 200 -numberOfLines 15 -text $aboutAuthor;
+				setParent ..;
+
+			tabLayout -e -selectTabIndex $selTab -tabLabel $child1 "zooTriggered! Help" -tabLabel $child2 "About zooTriggered!" $tabs;
+
+	popupMenu -p $image -b 1 -pmc ( "showHelp -a \"http://www.macaronikazoo.com/mel\"" );
+	showWindow $windowName;
+	}
+
+
+global proc string zooTriggeredInfo ( string $function ) {
+	string $creationDate = "17 May 2003";
+	string $lastRevision = "03 December 2003";
+	string $revisionHistory = "v1.14  03-12-03\nUI: double clicking either list selects objects.\nUI: there is now a load selected button.\n\nv1.12  02-12-03\nNEW: the % symbol is now supported in command strings.\nFIX: improved a lot of the help documentation.\n\nv1.03  27-11-03\nFIX: the command engine now works a bit more as expected.  the selection triggers now work with the different selection modes (ie add, toggle etc) instead of just replacing the selection.\nFIX: UI now scales with the window\n\nv1.01  11-11-03\nNEW: this initial version of the script now works with object connections instead of using raw text.  Which means importing files with triggers on them still work.\n\n0.65  19-05-03\n\n0.5  17-05-03\nNEW: initial version";
+	string $info = "";
+	float $currentVersion = 1.14;
+
+	if ( $function == "created" ) $info = $creationDate;
+	if ( $function == "modified" ) $info = $lastRevision;
+	if ( $function == "history" ) $info = $revisionHistory;
+	if ( $function == "version" ) $info = $currentVersion;
+	return $info;
+	}
+
+
+global proc string[] zooTriggeredDependencies( string $mode ) {
+	string $melDependencies[];
+	string $iconDependencies[];
+
+	$melDependencies[( `size $melDependencies` )] = "zooShelveIt";
+	$melDependencies[( `size $melDependencies` )] = "zooSortToHeirarchy";
+	$iconDependencies[( `size $iconDependencies` )] = "zoo_sig.tga";
+	$iconDependencies[( `size $iconDependencies` )] = "zooTriggered_0.bmp";
+	$iconDependencies[( `size $iconDependencies` )] = "zooTriggered_1.bmp";
+
+	if( $mode == "-scripts" ) return $melDependencies;
+	if( $mode == "-icons" ) return $iconDependencies;
+	}
+
+
+//zoo.end

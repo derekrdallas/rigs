@@ -1,0 +1,624 @@
+/*  This file downloaded from Highend3d.com
+''
+''  Highend3d.com File Information:
+''
+''    Script Name: tangent works v2.1
+''    Author: Hamish McKenzie
+''    Last Updated: April 29, 2003
+''    Update/Change this file at:
+''    http://www.highend3d.com/maya/mel/?section=animation#1315
+''
+''  History:
+''    intelligent key tangents v2.0 on October 3, 2002 by Hamish McKenzie
+''    intelligent key tangents v1.9 on March 17, 2002 by Hamish McKenzie
+''    intelligent key tangents v1.7 on December 12, 2001 by Hamish McKenzie
+''    intelligent key tangents v1.5 on November 5, 2001 by Hamish McKenzie
+''
+''  Please do not alter any information above this line
+''  it is generated dynamically by Highend3d.com and will
+''  be changed automatically on any updates.
+*/
+
+
+//
+// Tangent Works
+//
+// Created by Hamish McKenzie mel@mel.macaronikazoo.com
+// Created : 14 October 2001
+// Modified : 20 May 2003**
+//
+// Description:
+// creates a marking menu containing a bunch of keyframe
+// relevant operations.  The keys that are affected, is context
+// sensitive.  If there are keys on the current frame, it
+// changes them.  If there aren't keys on the current frame,
+// it changes the closest previous keyframes, and if keys are
+// selected, it changes those.
+//
+// Usage:
+//  assign this function to a key press:
+//	zooTangentWks;
+//
+//  assign this function to the release;
+//	zooTangentWksKillUI;
+//
+// NOTE: if the hotkey you want to assign this script to contains
+// either ctrl, alt or shift, then modify the "popupMenu" line below
+// to reflect which key is used (ie if you're using alt-w then
+// change it to -alt 1).
+//
+// Hamish McKenzie ©2003...
+// Macaroni Kazoo Productions ©2003...
+
+
+global proc zooTangentWks () {
+	global int $zzIsClicked;
+
+	$zzIsClicked = 0;
+	if( `popupMenu -exists tempMM` ) deleteUI tempMM;
+	if( `popupMenu -exists tempMM2` ) deleteUI tempMM2;
+
+	popupMenu -ctl 0 -alt 0 -sh 0 -mm 1 -b 1 -aob 0 -p viewPanes -pmc ( "zooTangentWksCreateUI" ) tempMM;
+	popupMenu -ctl 0 -alt 0 -sh 0 -mm 1 -b 2 -aob 0 -p viewPanes -pmc ( "zooTangentWksCreateUI2" ) tempMM2;
+	}
+
+
+global proc zooTangentWksCreateUI () {
+	global int $zzIsClicked;
+	int $isGraphFilterInstalled = `exists zooGraphFilter`;
+
+	setParent -m tempMM;
+	menu -e -dai tempMM;
+
+	$zzIsClicked = 1;
+	if ( $isGraphFilterInstalled ) eval( "source zooGraphFilter" );
+	if ( size(`ls -sl`)) {
+		menuItem -l "flat tangents" -command ( "zooTangentType flat" ) -rp "N";
+		menuItem -l "linear tangents" -command ( "zooTangentType linear" ) -rp "NE";
+		menuItem -l "spline tangents" -command ( "zooTangentType spline" ) -rp "W";
+		menuItem -l "clamped tangents" -command ( "zooTangentType clamped" ) -rp "NW";
+		menuItem -l "tighten key tangents" -command ( "zooTangentWksTangentUtils tighten" ) -rp "E";
+		menuItem -l "sharpen key tangents" -command ( "zooTangentWksTangentUtils sharpen" ) -rp "SE";
+		menuItem -l "filter like channels" -enable $isGraphFilterInstalled -command ( "zooGraphFilterChannels `zooGraphFilterGetHighlighted`" ) -rp "SW";
+		menuItem -l "flatten static keys" -command ( "zooTangentWksFlatenStaticKeys" ) -rp "S";
+
+		menuItem -l "convert -> key" -command ( "zooTangentWksBreakdown 0" );
+		menuItem -l "convert -> breakdown" -command ( "zooTangentWksBreakdown 1" );
+		menuItem -divider 1;
+		menuItem -l "stepped tangents" -command ( "zooTangentType step" );
+		}
+	else menuItem -l "no selected items" -enable 0;
+
+	menuItem -l "configure" -command ( "zooTangentWksConfig" );
+	menuItem -l "graph filters" -enable $isGraphFilterInstalled -command ( "zooGraphFilter" );
+	menuItem -divider 1;
+	menuItem -l "Help..." -command ( "zooTangentWksHelp help" );
+	menuItem -l "About" -command ( "zooTangentWksHelp about" );
+	}
+
+
+global proc zooTangentWksCreateUI2 () {
+	global int $zzIsClicked;
+	string $currentTangents[] = `keyTangent -q -global -itt -ott`;
+	int $isGraphFilterInstalled = `exists zooGraphFilter`;
+
+	setParent -m tempMM2;
+	menu -e -dai tempMM2;
+
+	$zzIsClicked = 1;
+	if ( $isGraphFilterInstalled ) eval( "source zooGraphFilter" );
+	if ( size(`ls -sl`)) {
+		menuItem -l "add inbetween" -command ( "zooTangentWksShiftKeys 1" ) -rp "E";
+		menuItem -l "remove inbetween" -command ( "zooTangentWksShiftKeys -1" ) -rp "W";
+		menuItem -l "scale time" -subMenu 1;
+			menuItem -l "by 2" -command ( "zooTangentWksScaleKeys 2" );
+			menuItem -l "by 3" -command ( "zooTangentWksScaleKeys 3" );
+			menuItem -l "by 4" -command ( "zooTangentWksScaleKeys 4" );
+			setParent -m tempMM2;
+		}
+	else menuItem -l "no selected items" -enable 0;
+
+	menuItem -divider 1;
+		menuItem -l "default tangents" -subMenu 1;
+			menuItem -l "spline" -checkBox (( $currentTangents[0] == "spline" && $currentTangents[1] == "spline" )?1:0 ) -command ( "keyTangent -global -itt spline -ott spline" );
+			menuItem -l "linear" -checkBox (( $currentTangents[0] == "linear" && $currentTangents[1] == "linear" )?1:0 ) -command ( "keyTangent -global -itt linear -ott linear" );
+			menuItem -l "stepped" -checkBox (( $currentTangents[0] == "linear" && $currentTangents[1] == "step" )?1:0 ) -command ( "keyTangent -global -itt linear -ott step" );
+			menuItem -l "clamped" -checkBox (( $currentTangents[0] == "clamped" && $currentTangents[1] == "clamped" )?1:0 ) -command ( "keyTangent -global -itt clamped -ott clamped" );
+			menuItem -l "flat" -checkBox (( $currentTangents[0] == "flat" && $currentTangents[1] == "flat" )?1:0 ) -command ( "keyTangent -global -itt flat -ott flat" );
+			setParent -m tempMM2;
+
+	menuItem -divider 1;
+	menuItem -l "configure" -command ( "zooTangentWksConfig" );
+	menuItem -l "graph filters" -enable $isGraphFilterInstalled -command ( "zooGraphFilter" );
+	menuItem -divider 1;
+	menuItem -l "help" -command ( "zooTangentWksHelp help" );
+	menuItem -l "about" -command ( "zooTangentWksHelp about" );
+	}
+
+
+global proc zooTangentWksShiftKeys( string $function ) {
+	global string $gPlayBackSlider;
+	string $selObjs[] = `ls -l -sl`;
+	float $selectedTimeRange[] = `timeControl -q -rangeArray $gPlayBackSlider`;
+	int $shiftAmount = $function;
+
+	for ( $obj in $selObjs ) {
+		string $keySet = `zzKeySet $obj`;
+		switch ( $keySet ) {
+			case "selection":
+			float $selectedKeyTimes[] = `keyframe -q -selected $obj`;
+
+			$selectedKeyTimes = `sort $selectedKeyTimes`;
+			int $startTime = $selectedKeyTimes[0];
+			int $temp = `size $selectedKeyTimes` - 1;
+			int $endTime = $selectedKeyTimes[$temp];
+			keyframe -e -t ( $startTime + ":" + $endTime ) -tc $shiftAmount -r $obj;
+			break;
+
+
+			case "current":
+			case "previous":
+			keyframe -e -t ( `currentTime -q` + ":" ) -tc $shiftAmount -r $obj;
+			break;
+			}
+		}
+
+	playbackOptions -e -max ( `playbackOptions -q -max` + $shiftAmount );
+	}
+
+
+//
+global proc zooTangentWksScaleKeys( float $scale ) {
+	string $selObjs[] = `ls -l -sl`;
+
+	for ( $obj in $selObjs ) {
+		string $keySet = `zzKeySet $obj`;
+		switch ( $keySet ) {
+			case "selection":
+			float $selectedKeyTimes[] = `keyframe -q -selected $obj`;
+
+			$selectedKeyTimes = `sort $selectedKeyTimes`;
+			scaleKey -t ( $selectedKeyTimes[0] + ":" + $selectedKeyTimes[( `size $selectedKeyTimes` - 1 )]) -timePivot $selectedKeyTimes[0] -timeScale $scale $obj;
+			break;
+
+
+			case "current":
+			case "previous":
+			scaleKey -t "1:" -timePivot 1 -timeScale $scale $obj;
+			break;
+			}
+		}
+	}
+
+
+//perform a flatten tangent on static keys - if keys are selected, it will only flatten selected static keys, otherwise it works on all keys of selected objects
+global proc zooTangentWksFlatenStaticKeys() {
+	string $selObjs[] = `ls -l -sl`;
+	int $areAnyKeysSelected = size(`keyframe -q -sl`);
+
+	for( $obj in $selObjs ) {
+		string $channels[] = `listAttr -k -u $obj`;
+		for( $channel in $channels ) {
+			float $flatKeys[] = `zooTangentWksGetStaticKeys $obj $channel`;
+			float $selectedKeyTimes[] = `keyframe -q -sl ( $obj + "." + $channel )`;
+			float $keysToFlatten[] = $flatKeys;
+
+			if( $areAnyKeysSelected ) {
+				clear $keysToFlatten;
+				for( $key in $flatKeys ) for( $selKey in $selectedKeyTimes ) if( $key == $selKey ) $keysToFlatten[( `size $keysToFlatten` )] = $key;
+				}
+
+			for( $key in $keysToFlatten ) keyTangent -t $key -itt flat -ott flat ( $obj + "." + $channel );
+			}
+		}
+	}
+
+
+global proc zooTangentType ( string $tangentType ) {
+	global string $gPlayBackSlider;
+	global string $gMainProgressBar;
+	string $selObjs[] = `ls -l -sl`;
+	string $currentObjs[];
+	string $previousObjs[];
+	float $selectedTimeRange[] = `timeControl -q -rangeArray $gPlayBackSlider`;
+	float $increment = 100/(float)( `size $selObjs` );
+	float $progress = 0;
+
+	progressBar -e -beginProgress -status "Adjusting Tangents: 0%" -progress ((int)$progress) -isInterruptable 1 $gMainProgressBar;
+	if( $selectedTimeRange[0] != $selectedTimeRange[1]-1 ) keyTangent -t ( $selectedTimeRange[0] + ":" + $selectedTimeRange[1] ) -itt $tangentType -ott $tangentType;
+	else if( `keyframe -q -selected -keyframeCount` ) keyTangent -animation "keys" -itt $tangentType -ott $tangentType;
+	else {
+		for( $obj in $selObjs ) {
+			string $keySet = `zzKeySet $obj`;
+
+			//update progress window
+			$progress += $increment;
+			progressBar -e -progress ((int)$progress) -status ( "Adjusting Tangents: " + ((int)$progress) + "%" ) $gMainProgressBar;
+
+			//terminate the loop if cancelled
+			if( `progressBar -q -isCancelled $gMainProgressBar` ) break;
+
+			if( $keySet == "current" ) $currentObjs[( `size $currentObjs` )] = $obj;
+			if( $keySet == "previous" ) $previousObjs[( `size $previousObjs` )] = $obj;
+			}
+
+		keyTangent -time ( `currentTime -q` ) -itt $tangentType -ott $tangentType $currentObjs;
+		for( $obj in $previousObjs ) keyTangent -time ( `findKeyframe -which previous $obj` ) -itt $tangentType -ott $tangentType $obj;
+		}
+
+	progressBar -e -endProgress $gMainProgressBar;
+	}
+
+
+global proc zooTangentWksBreakdown ( int $keyState ) {
+	global string $gPlayBackSlider;
+	string $selObjs[] = `ls -l -sl`;
+	string $newKeyType = $keyState ? "breakdowns":"keys";
+	float $selectedTimeRange[] = `timeControl -q -rangeArray $gPlayBackSlider`;
+	int $num = `size( $selObjs )`;
+	int $numKeysSelected = `keyframe -q -selected -keyframeCount`;
+
+	for ( $obj in $selObjs ) {
+		string $keySet = `zzKeySet $obj`;
+
+		switch ( $keySet ) {
+			case "range":
+			keyframe -t ( $selectedTimeRange[0] + ":" + $selectedTimeRange[1] ) -breakdown $keyState;
+			print ( "all keys in the highlighted range have been converted to " + $newKeyType + " for " + $num + " objects\n" );
+			break;
+
+
+			case "selection":
+			keyframe -animation "keys" -breakdown $keyState;
+			print ( "selected keyframes set to " + $newKeyType + " for " + $numKeysSelected + " keys in " + $num + " objects\n" );
+			break;
+
+
+			case "current":
+			keyframe -time ( `currentTime -q` ) -breakdown $keyState $obj;
+			print ( "keyframe at current time changed to " + $newKeyType + " for object: " + $obj + "\n" );
+			break;
+
+
+			case "previous":
+			$nearFrame = `findKeyframe -which previous $obj`;
+			keyframe -time $nearFrame -breakdown $keyState $obj;
+			print ( "keyframes at time " + $nearFrame + " set to " + $newKeyType + " for object: " + $obj + "\n" );
+			break;
+			}
+		}
+	}
+
+
+global proc zooTangentWksTangentUtils ( string $function ) {
+	global string $gPlayBackSlider;
+	global string $gMainProgressBar;
+	string $selObjs[] = `ls -l -sl`;
+	string $isRangeSelected = `zzKeySet $selObjs[0]` == "range"? 1:0;
+	float $selectedTimeRange[2] = `timeControl -q -rangeArray $gPlayBackSlider`;
+	float $tightWeight = ( `optionVar -exists zooTangentWksTightenWeight` )?`optionVar -q zooTangentWksTightenWeight`:2;
+	float $sharpWeight = ( `optionVar -exists zooTangentWksSharpenWeight` )?`optionVar -q zooTangentWksSharpenWeight`:1.5;
+	float $increment = 100/(float)( `size $selObjs` );
+	float $progress = 0;
+
+	if( $tightWeight == 0 ) warning "tighten weight are currently set to zero - using default values";
+	if( $sharpWeight == 0 ) warning "sharpen weight are currently set to zero - using default values";
+
+	progressBar -e -beginProgress -progress ((int)$progress) -status "Adjusting Tangents: 0%" -isInterruptable 0 $gMainProgressBar;
+	for ( $obj in $selObjs ) {
+		// setup variables for animated attributes
+		string $objectAnimConnections[] = `listConnections -d 0 -c 1 -type "animCurve" $obj`;
+		string $animatedAttribs[];
+		string $animCurveNames[];
+
+		clear $animatedAttribs;
+		clear $animCurveNames;
+		for ( $n = 0; $n < `size $objectAnimConnections`; $n+=2 ) {
+			string $attrib[];
+			string $entry = $objectAnimConnections[$n];
+
+			tokenize ( $entry, ".", $attrib );
+			$animatedAttribs[( $n/2 )] = $attrib[1];
+			$animCurveNames[( $n/2 )] = $objectAnimConnections[( $n+1 )];
+			}
+
+		// now that we have an array with all animated attributes of an object, we can determine
+		// which keys on each attribute are selected, and find out tangent information.
+		for ( $n = 0; $n < `size $animatedAttribs`; $n++ ) {
+			// this will now allow us to get an array of individual keys on each attribute
+			string $attrib = $animatedAttribs[$n];
+			string $objAttrib = $obj + "." + $attrib;
+			float $keyList[] = `zooTangentWksFindKeyList $obj $attrib $isRangeSelected $selectedTimeRange[0] $selectedTimeRange[1]`;
+
+			keyTangent -e -weightedTangents 1 $animCurveNames[$n];  //this makes sure the anim curves have weighted tangents enabled
+			for ( $key in $keyList ) {
+				float $tangentInX[2]		= `keyTangent -t $key -q -ix $objAttrib`;
+				float $tangentOutX[2]	= `keyTangent -t $key -q -ox $objAttrib`;
+				float $tangentInY[2]		= `keyTangent -t $key -q -iy $objAttrib`;
+				float $tangentOutY[2]	= `keyTangent -t $key -q -oy $objAttrib`;
+
+				if ( $function == "tighten" ) keyTangent -e -a -t $key -ix $tangentInX[0] -iy ($tangentInY[0]/$tightWeight) -ox $tangentOutX[0] -oy ($tangentOutY[0]/$tightWeight) $objAttrib;
+				if ( $function == "sharpen" ) keyTangent -e -a -t $key -ix ($tangentInX[0]/$sharpWeight) -iy ($tangentInY[0]/$sharpWeight) -ox ($tangentOutX[0]/$sharpWeight) -oy ($tangentOutY[0]/$sharpWeight) $objAttrib;
+				}
+			}
+
+		//update progress window
+		$progress += $increment;
+		progressBar -e -progress ((int)$progress) -status ( "Adjusting Tangents: " + ((int)$progress) + "%" ) $gMainProgressBar;
+		}
+
+	progressBar -e -endProgress $gMainProgressBar;
+	}
+
+
+global proc float[] zooTangentWksFindKeyList ( string $obj, string $attrib, int $isRangeSelected, float $startRange, float $endRange ) {
+	string $keySet = "previous";
+	float $return[];
+
+	if ( $isRangeSelected ) $keySet = "range";
+	else $keySet = `zzKeySet $obj`;
+	switch ( $keySet ) {
+		case "range":
+		int $startTimeKeys = `keyframe -time $startRange -q -kc ( $obj + "." + $attrib )`;
+		int $nextKeyTime = $startRange;
+		int $n = 0;
+
+		//if there is a key on the start frame of the selected range, add it to the return array
+		if ( $startTimeKeys > 0 ) {
+			$return[$n] = $startRange;
+			$nextKeyTime = `findKeyframe -time $nextKeyTime -which next ( $obj + "." + $attrib )`;
+			$n++;
+			}
+
+		//now iterate through all key times in the selected range and add them to the return array
+		while ( $nextKeyTime <= $endRange ) {
+			$return[$n] = $nextKeyTime;
+			$nextKeyTime = `findKeyframe -time $nextKeyTime -which next ( $obj + "." + $attrib )`;
+			$n++;
+			}
+		break;
+
+
+		case "selection":
+		$return = `keyframe -query -selected ( $obj + "." + $attrib )`;
+		break;
+
+
+		case "current":
+		float $currentTime = `currentTime -q`;
+		$return = `keyframe -time $currentTime -q -tc ( $obj + "." + $attrib )`;
+		break;
+
+
+		case "previous":
+		float $currentTime = `currentTime -q`;
+		$return[0] = `findKeyframe -time $currentTime -which previous ( $obj + "." + $attrib )`;
+		break;
+		}
+
+	return $return;
+	}
+
+
+global proc float[] zooTangentWksGetStaticKeys( string $obj, string $attrib ) {
+	float $keyTimes[] = `keyframe -q -tc ( $obj + "." + $attrib )`;
+	float $flatKeys[];	
+
+	float $prevKeyValue[];
+	float $currentKeyValue[] = `keyframe -t $keyTimes[0] -q -vc ( $obj + "." + $attrib )`;
+	float $nextKeyValue[] = `keyframe -t $keyTimes[1] -q -vc ( $obj + "." + $attrib )`;
+
+	if( $currentKeyValue[0] == $nextKeyValue[0] ) $flatKeys[( `size $flatKeys` )] = $keyTimes[0];
+
+	for( $n = 1; $n < `size $keyTimes`; $n++ ){
+		clear $prevKeyValue;
+		clear $currentKeyValue;
+		clear $nextKeyValue;
+
+		$prevKeyValue = `keyframe -t $keyTimes[( $n-1 )] -q -vc ( $obj + "." + $attrib )`;
+		$currentKeyValue = `keyframe -t $keyTimes[$n] -q -vc ( $obj + "." + $attrib )`;
+		$nextKeyValue = `keyframe -t $keyTimes[( $n+1 )] -q -vc ( $obj + "." + $attrib )`;
+
+		if( $currentKeyValue[0] == $prevKeyValue[0] || $currentKeyValue[0] == $nextKeyValue[0] ) $flatKeys[( `size $flatKeys` )] = $keyTimes[$n];
+		}
+
+	return $flatKeys;
+	}
+
+
+global proc string zzKeySet ( string $obj ) {
+	global string $gPlayBackSlider;
+	float $selectedTimeRange[2] = `timeControl -q -rangeArray $gPlayBackSlider`;
+
+	if ( $selectedTimeRange[0] != ( $selectedTimeRange[1]-1 )) return "range";
+	else if ( `keyframe -q -selected -keyframeCount` ) return "selection";  //test to see if there are ANY keys selected (not just on $obj)
+	else {
+		float $currentTime = `currentTime -q`;
+		if ( `keyframe -time $currentTime -q -keyframeCount $obj` ) return "current";
+		else return "previous";
+		}
+	}
+
+
+global proc zooTangentWksConfig () {
+	string $windowName = "zooTangentWksConfigWindow";
+	string $windowTitle = "Tangent Works";
+	string $currentDefault = ( `optionVar -exists zooTangentWksDefaultOption` )?`optionVar -q zooTangentWksDefaultOption`:"flat";
+	string $functionNames[] = { "spline", "linear", "flat", "step", "clamped", "tighten", "sharpen" };
+	int $defaultOn = ( `optionVar -exists zooTangentWksCheckDefault` )?`optionVar -q zooTangentWksCheckDefault`:1;
+	int $selection = 1;
+	int $n = 1;
+
+	if ( `window -exists $windowName` ) deleteUI $windowName;
+	window -title $windowTitle -resizeToFitChildren 1 -maximizeButton 0 -sizeable 1 -width 177 $windowName;
+
+		menuBarLayout;
+			menu -label "Help";
+				menuItem -l "Help..." -c ( "zooTangentWksHelp help" );
+				menuItem -divider 1;
+				menuItem -l "About" -c ( "zooTangentWksHelp about" );
+
+			columnLayout -adjustableColumn true -rowSpacing 2 zooTangentWksLeftColumn;
+				text -align "left" -label "Change default behaviour to:";
+				rowLayout -numberOfColumns 2
+					-columnWidth2 90 80
+					-columnAttach 1 "both" 	1
+					-columnAttach 2 "both" 	1;
+					optionMenu -label "" -changeCommand ( "" ) zooTangentWksDefaultOption;
+					checkBox -align "left" -label "Default On" -v $defaultOn zooTangentWksCheckDefault;
+					setParent..;
+
+				for ( $function in $functionNames ) {
+					menuItem -label $function -p zooTangentWksDefaultOption;
+					if ( $function == $currentDefault ) { $selection = $n; }
+					$n++;
+					}
+
+				float $tightWeight = ( `optionVar -exists zooTangentWksTightenWeight` )?`optionVar -q zooTangentWksTightenWeight`:2;
+				float $sharpWeight = ( `optionVar -exists zooTangentWksSharpenWeight` )?`optionVar -q zooTangentWksSharpenWeight`:1.5;
+
+				rowLayout -numberOfColumns 3
+					-columnWidth3 35 35 100
+					-columnAttach 1 "both" 1
+					-columnAttach 2 "both" 1
+					-columnAttach 3 "both" 1;
+					text -label "weight";
+					textField -ed 1 -text $tightWeight -cc ( "{ float $value = `textField -q -text zooTangentWksTextfieldTighten`; floatSlider -e -value $value zooTangentWksSliderTighten; }" ) zooTangentWksTextfieldTighten;
+					floatSlider -min 1 -max 10 -value $tightWeight -step 1 -cc ( "textField -e -text `floatSlider -q -v zooTangentWksSliderTighten` zooTangentWksTextfieldTighten" ) zooTangentWksSliderTighten;
+					setParent..;
+
+				rowLayout -numberOfColumns 3
+					-columnWidth3 35 35 100
+					-columnAttach 1 "both" 1
+					-columnAttach 2 "both" 1
+					-columnAttach 3 "both" 1;
+					text -label "weight";
+					textField -ed 1 -text $sharpWeight -cc ( "{ float $value = `textField -q -text zooTangentWksTextfieldSharpen`; floatSlider -e -value $value zooTangentWksSliderSharpen; }" ) zooTangentWksTextfieldSharpen;
+					floatSlider -min 1 -max 5 -value $sharpWeight -step 1 -cc ( "textField -e -text `floatSlider -q -v zooTangentWksSliderSharpen` zooTangentWksTextfieldSharpen" ) zooTangentWksSliderSharpen;
+					setParent..;
+
+				rowLayout -numberOfColumns 2
+					-columnWidth2 85 85
+					-columnAttach 1 "both" 	1
+					-columnAttach 2 "both" 	1;
+					button -label "Save Config" -c ( "zooTangentWksConfigDoIt defaultChange" );
+					button -label "Cancel" -c ( "zooTangentWksConfigDoIt cancel" );
+					setParent..;
+
+				string $image = `image -width 177 -height 8 -backgroundColor ((float)96/255) ((float)100/255) ((float)146/255) -image ( internalVar("-userBitmapsDir") + "/zoo_sig.tga" )`;
+				popupMenu -p $image -b 1 -pmc ( "showHelp -a \"http://www.macaronikazoo.com/mel\"" );
+				setParent..;
+
+	showWindow $windowName;
+	optionMenu -edit -select $selection zooTangentWksDefaultOption;
+	}
+
+
+global proc zooTangentWksConfigDoIt ( string $function ) {
+	string $windowName = "zooTangentWksConfigWindow";
+
+	switch ( $function ) {
+		case "defaultChange":
+		optionVar -stringValue zooTangentWksCheckDefault ( `checkBox -q -v zooTangentWksCheckDefault` );
+		optionVar -stringValue zooTangentWksDefaultOption ( `optionMenu -q -value zooTangentWksDefaultOption` );
+		optionVar -floatValue zooTangentWksTightenWeight ( `floatSlider -q -v zooTangentWksSliderTighten` );
+		optionVar -floatValue zooTangentWksSharpenWeight ( `floatSlider -q -v zooTangentWksSliderSharpen` );
+		deleteUI $windowName;
+		break;
+
+		case "cancel":
+		deleteUI $windowName;
+		break;
+		}
+	}
+
+
+global proc zooTangentWksKillUI () {
+	global int $zzIsClicked;
+
+	if( `popupMenu -ex tempMM` ){
+		int $defaultOn = ( `optionVar -exists zooTangentWksCheckDefault` )?`optionVar -q zooTangentWksCheckDefault`:1;
+
+		deleteUI tempMM;
+		if ( !$zzIsClicked && $defaultOn ) {
+			string $currentDefault = ( `optionVar -exists zooTangentWksDefaultOption` )?`optionVar -q zooTangentWksDefaultOption`:"flat";
+
+			if ( $currentDefault == "tighten" ) zooTangentWksTangentUtils tighten;
+			else if ( $currentDefault == "sharpen" ) zooTangentWksTangentUtils sharpen;
+			else zooTangentType $currentDefault;
+			}
+		}
+
+	if( `popupMenu -ex tempMM2` ) deleteUI tempMM2;
+	$zzIsClicked = 0;
+	}
+
+
+global proc zooTangentWksHelp ( string $function ) {
+	string $windowName = "zooTangentWksAbout";
+	string $windowTitle = "Tangent Works v" + `zooTangentWksInfo version` + "   ::macaroniKazoo::";
+	string $aboutScript = "Overview:\nTangent Works is a marking menu based script to help speed the process of animation.  It allows really fast access to changing key tangents, and time shifting keys, without having to open the graph editor.\n\nWhen the key you've assigned Tangent Works to is pressed, and released (ie without doing anything), the tangent for the key on the current frame will be flattened.  If there is no key on the current frame, the nearest previous key will have its tangents flattened.  If you have either a keyframe, or a range selected in the timeline however, those keys will be operated on.  This single press default can be changed in the configure options.\n\nNOTE: if you don't have any keys selected, and you have a lot of objects selected, this script can be slow, as it detects which key to operate on for every attribute on every object.\n\nMost of the operations are standard maya functions, except for two.  Tangent flattening, and tangent sharpening.\n\nFlatten tangents will do a partial flatten on a tangent.  Its useful for creating flatter tangents, without removing all motion from a curve.\n\nSharpen tangents is similar, but it shrinks the length of the tangents, thus making the key tighter, and more linear-like.\n\nThe strength of both the sharpen function and the flatten function can be altered in the config window.  The higher the strength, the flatter, or sharper the functions will make the tangents they operate on.\n\nMiddle Click Menu:\nNew to version 2.5 is the middle click menu which gives access to time based key functions, like time scaling and shifting.\n\nGraph Filters:\nTangent Works now has a quick interface to the zooGraphFilters script, if it is present on your system.  It enables you to quickly filter selected channels on all selected objects.  See the zooGraphFilter help for more information.";
+	string $aboutAuthor = "Version: " + `zooTangentWksInfo version` + "\nCreation Date: " + `zooTangentWksInfo created` + "\nLast Modified: " + `zooTangentWksInfo modified` + "\n\nTangent Works was written by Macaroni Kazoo Productions  www.macaronikazoo.com\n\nWe hope you find it to be such a useful tool, that you tell all your friends about it.\n\n" + `zooTangentWksInfo history`;
+	int $selTab = ( $function == "about" )?2:1;
+
+	if ( `window -exists $windowName` ) deleteUI $windowName;
+	window -title $windowTitle -resizeToFitChildren 1 -maximizeButton 0 -sizeable 1 -widthHeight 330 300 $windowName;
+
+		 string $form = `formLayout`;
+		 string $tabs = `tabLayout -innerMarginWidth 5 -innerMarginHeight 5`;
+		 string $image = `image -p $form -width 300 -height 8 -backgroundColor ((float)96/255) ((float)100/255) ((float)146/255) -image ( internalVar("-userBitmapsDir") + "/zoo_sig.tga" )`;
+		 formLayout -edit
+			-attachForm $tabs "top" 0
+			-attachForm $tabs "left" 0
+			-attachForm $tabs "right" 0
+			-attachControl $tabs "bottom" 2 $image
+
+			-attachNone $image "top"
+			-attachForm $image "left" 0
+			-attachForm $image "right" 0
+			-attachForm $image "bottom" 0
+			$form;
+
+			string $child1 = `paneLayout -configuration "single"`;
+				scrollField -ed 0 -wordWrap 1 -font plainLabelFont -w 300 -h 200 -numberOfLines 15 -text $aboutScript;
+				setParent ..;
+
+			string $child2 = `paneLayout -configuration "single"`;
+				scrollField -ed 0 -wordWrap 1 -font plainLabelFont -w 300 -h 200 -numberOfLines 15 -text $aboutAuthor;
+				setParent ..;
+
+			tabLayout -e -selectTabIndex $selTab -tabLabel $child1 "Tangent Works Help" -tabLabel $child2 "About Tangent Works" $tabs;
+
+	popupMenu -p $image -b 1 -pmc ( "showHelp -a \"http://www.macaronikazoo.com/mel\"" );
+	showWindow $windowName;
+	}
+
+
+global proc string zooTangentWksInfo ( string $function ) {
+	string $creationDate = "14 October 2001";
+	string $lastRevision = "16 December 2003";
+	string $revisionHistory = "v2.74  19-12-03\nFIX: stupid error stopped tightening working on rotation and scale fixed\n\nv2.73  15-12-03\nUI: the progress window is now a progress bar, which is less annoying.\nFIX: minor fixes, tightening should be slightly faster now.\n\nv2.71  05-11-03\nNEW: now has an act on static key mode.  so you can flatten, tighten or sharpen static keys.\n\nv2.61  22-08-03\nNEW: Added progress window for all cpu intensive procs.\nFIX: Sped up tangent changing proc for range/key selection enormously.\n\nv2.53  20-05-03\nFIX: minor code tweaks\n\nv2.51  12-06-03\nNEW: added a middle mouse menu for key time operations, as well as fixing up an inconsistancy bug with the way the key mode (ie range, selected, current or previous) was determined.\n\nv2.05  20-05-03\nFIX: very minor code tweaks, and name officially changed.\n\nv2.0  29-04-03\nNEW: a reasonable overhaul.  the script is now  called tangent works, and has been integrated with zooGraphFilters, if it is present.  tidied up the code a little, and added a help window.  fixed a bug which often happened when large numbers of objects were selected, and tangents were either tightened or sharpened.  It was a very annoying bug...\n\nv1.25  18-03-02\nNEW: added a config window, so you can turn off the button press default functionality, and change default tangent types.\n\nv1.1  05-11-01\nNEW: added tighten tangents option, which partially flattens out key tangents.\n\nv0.42\noriginal release version.";
+	string $info = "";
+	float $currentVersion = 2.74;
+
+	if ( $function == "created" ) $info = $creationDate;
+	if ( $function == "modified" ) $info = $lastRevision;
+	if ( $function == "history" ) $info = $revisionHistory;
+	if ( $function == "version" ) $info = $currentVersion;
+	return $info;
+	}
+
+
+global proc string[] zooTangentWksDependencies( string $mode ) {
+	string $melDependencies[];
+	string $iconDependencies[];
+
+	$melDependencies[( `size $melDependencies` )] = "zooGraphFilter";
+	$iconDependencies[( `size $iconDependencies` )] = "zooTangentWks_flattenStatic.bmp";
+
+	if( $mode == "-scripts" ) return $melDependencies;
+	if( $mode == "-icons" ) return $iconDependencies;
+	}
+
+
+//zoo.end

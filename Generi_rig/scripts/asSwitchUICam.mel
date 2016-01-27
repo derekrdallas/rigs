@@ -1,0 +1,47 @@
+// this script changes trigger interface to the window that the mouse is over 
+// create a user hotkey and map the following command
+//    asSwitchUICam;
+// author andrew silke
+// www.cane-toad.com
+
+
+global proc asSwitchUICam () {
+
+//find what camera is active
+  string $camera = modelPanel( "-q", "-camera",
+                               getPanel( "-underPointer" ) );
+  if( nodeType($camera) != "transform" ) {
+    string $rels[] = listRelatives( "-p", $camera );
+    $camera = $rels[0];
+  }
+  print $camera;
+
+
+//find trigger group
+string $trigObj[] = `ls -transforms "*trigger_interface"`; 
+
+
+//query to see if it's a orth camera
+int $orthCam = `getAttr ($camera + ".orthographic")`;
+
+//if no switch parent
+if ($orthCam)
+		{print "UI does not work on orthographic cameras";
+		}
+else
+		{
+
+		//parent it to that camera
+		parent $trigObj[0] $camera;
+
+		//get lens info of camera and match to user_interface.lens attribute
+		string $cameraShape[] = `listRelatives -s $camera`;
+		float $lens = `getAttr ($cameraShape[0] + ".focalLength")`;
+		setAttr ($trigObj[0] + ".lens ") $lens ;	
+		
+		//show camera in case hidden
+		setAttr ($camera + ".visibility") 1;	
+		select -cl  ;
+		}
+
+}

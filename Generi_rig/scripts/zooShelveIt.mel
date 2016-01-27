@@ -1,0 +1,54 @@
+//this script is a helper script, used for shelf button creation.  its a good idea
+//for scripts to have the ability to install a shelf button.  This script will
+//install a shelf button for a script, but tag it with certain information so that
+//the button can be reliably manipulated later by MEL.  this is useful for creating
+//buttons with press "rollovers" (ie state changing) as well as for attaching RMB
+//popup menus.
+
+
+//creates a shelf button, and tags it, and returns the button UI name so the shelf button can be further configured
+global proc string zooShelveItInstallShelfButton( string $buttonTag ) {
+	global string $gShelfTopLevel;
+	string $shelfButtonName = `zooShelveItGetShelfButton $buttonTag`;
+	string $currentShelf = `shelfTabLayout -q -selectTab $gShelfTopLevel`;
+	string $buttonName = `shelfButton -p $currentShelf -docTag $buttonTag`;
+
+	return $buttonName;
+	}
+
+
+//returns the name of the zooShelveIt shelf button for the current shelf
+global proc string zooShelveItGetShelfButton( string $buttonTag ) {
+	global string $gShelfTopLevel;
+	string $buttonName = "";
+	string $shelfButtons[] = eval( "shelfLayout -q -ca `shelfTabLayout -q -selectTab $gShelfTopLevel`" );
+
+	for ( $button in $shelfButtons ) if( `shelfButton -exists $button` ) if( `shelfButton -q -docTag $button` == $buttonTag ) $buttonName = $button;
+	return $buttonName;
+	}
+
+
+//returns the name of the zooShelveIt shelf button for a specified shelf
+global proc string zooShelveItGetShelfButtonFor( string $shelf, string $buttonTag ) {
+	global string $gShelfTopLevel;
+	string $buttonName = "";
+	string $shelfButtons[] = `shelfLayout -q -ca $shelf`;
+
+	for ( $button in $shelfButtons ) if( `shelfButton -exists $button` ) if( `shelfButton -q -docTag $button` == $buttonTag ) $buttonName = $button;
+	return $buttonName;
+	}
+
+
+//returns the name of the zooShelveIt shelf button for all shelves
+global proc string[] zooShelveItGetShelfButtonAll( string $buttonTag ) {
+	global string $gShelfTopLevel;
+	string $buttonNames[];
+	string $shelves[] = `shelfTabLayout -q -ca $gShelfTopLevel`;
+
+	for( $shelf in $shelves ) {
+		string $shelfButtons[] = `shelfLayout -q -ca $shelf`;
+		for ( $button in $shelfButtons ) if( `shelfButton -exists $button` ) if( `shelfButton -q -docTag $button` == $buttonTag ) $buttonNames[( `size $buttonNames` )] = $button;
+		}
+
+	return $buttonNames;
+	}

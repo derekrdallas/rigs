@@ -1,0 +1,248 @@
+global proc shelf_generiHead () {
+    global string $gBuffStr;
+    global string $gBuffStr0;
+    global string $gBuffStr1;
+
+
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -label "select eye R" 
+        -image1 "generi/eye_R.bmp" 
+        -style "iconOnly" 
+        -command "select -tgl generi_eye_Rot_R ;" 
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -label "select eye L" 
+        -image1 "generi/eye_L.bmp" 
+        -style "iconOnly" 
+        -command "select -tgl generi_eye_Rot_L ;" 
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -label "select head" 
+        -image1 "generi/head.bmp" 
+        -style "iconOnly" 
+        -command "select -tgl generi_head_ctrl ;" 
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -label "select mouthshapes" 
+        -image1 "generi/mouth.bmp" 
+        -style "iconOnly" 
+        -command "select -tgl generi_mouthShapes ;" 
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -label "select jaw" 
+        -image1 "generi/jaw.bmp" 
+        -style "iconOnly" 
+        -command "select -tgl generi_jaw_ctrl ;" 
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -label "select brow far R" 
+        -image1 "generi/brow01.bmp" 
+        -style "iconOnly" 
+        -command "select -tgl generi_h_browbone_R ;" 
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -label "select brow mid R" 
+        -image1 "generi/brow02.bmp" 
+        -style "iconOnly" 
+        -command "select -tgl generi_h_browboneMid_R ;" 
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -label "select brow mid " 
+        -image1 "generi/brow03.bmp" 
+        -style "iconOnly" 
+        -command "select -tgl generi_h_browbone_C ;" 
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -label "select brow mid L" 
+        -image1 "generi/brow04.bmp" 
+        -style "iconOnly" 
+        -command "select -tgl generi_h_browboneMid_L ;" 
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -label "select brow far L" 
+        -image1 "generi/brow05.bmp" 
+        -style "iconOnly" 
+        -command "select -tgl generi_h_browbone_L ;" 
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -label "select tongue control" 
+        -image1 "generi/tongue.bmp" 
+        -style "iconOnly" 
+        -command "select -tgl generi_toungeControl ;" 
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -label "select upper teeth " 
+        -image1 "generi/teethUpper.bmp" 
+        -style "iconOnly" 
+        -command "select -tgl generi_teethUpper ;" 
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -label "select lower teeth " 
+        -image1 "generi/teethLow.bmp" 
+        -style "iconOnly" 
+        -command "select -tgl generi_teethLower ;" 
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -label "select nose" 
+        -image1 "generi/nose.bmp" 
+        -style "iconOnly" 
+        -command "select -tgl generi_noseJoint ;" 
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -label "select eye socket R" 
+        -image1 "generi/eyeSocket_R.bmp" 
+        -style "iconOnly" 
+        -command "select -tgl generi_h_eyeSocketBone_R ;" 
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -label "select eye socket L" 
+        -image1 "generi/eyeSocket_L.bmp" 
+        -style "iconOnly" 
+        -command "select -tgl generi_h_eyeSocketBone_L ;" 
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -label "select ear R" 
+        -image1 "generi/ear_R.bmp" 
+        -style "iconOnly" 
+        -command "select -tgl generi_earJoint_R ;" 
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -label "select ear L" 
+        -image1 "generi/ear_L.bmp" 
+        -style "iconOnly" 
+        -command "select -tgl generi_earJoint_L ;" 
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -label "select eye follow" 
+        -image1 "generi/eyeFollow.bmp" 
+        -style "iconOnly" 
+        -command "select -tgl generi_eye_follow_ctrl ;" 
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 34
+        -height 34
+        -manage 1
+        -visible 1
+        -label "select head follow" 
+        -image1 "generi/smiley.bmp" 
+        -style "iconOnly" 
+        -command "select -tgl generi_head_follow_ctrl ;" 
+    ;
+
+} 
